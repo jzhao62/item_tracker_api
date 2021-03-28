@@ -37,7 +37,7 @@ def delete_item_by_title(title, dynamodb=None):
         else:
             raise
     else:
-        return response.get('item')
+        return response
 
 
 def get_all_items(dynamodb=None):
@@ -59,3 +59,7 @@ def get_all_items(dynamodb=None):
         done = start_key is None
 
     return items
+
+
+if __name__ == '__main__':
+    create_item("GGWP")
