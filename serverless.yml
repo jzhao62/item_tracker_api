@@ -1,0 +1,68 @@
+org: zhaoelton
+app: my-fullstack-app
+service: leetcode-api
+
+frameworkVersion: '2'
+
+custom:
+  tableName: 'leetcode-tracker-${self:provider.stage}'
+  wsgi:
+    app: app.app
+
+package:
+  individually: true
+  exclude:
+    - venv/**
+    - node_modules/**
+
+provider:
+  name: aws
+  runtime: python3.8
+  lambdaHashingVersion: '20201221'
+  stage: prod
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - Fn::GetAtt: [ UsersTable, Arn ]
+  environment:
+    LEETCODE_ITEM_TABLE: ${self:custom.tableName}
+
+functions:
+  api:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+      - http:
+          path: /{proxy+}
+          method: ANY
+
+plugins:
+  - serverless-wsgi
+  - serverless-python-requirements
+
+resources:
+  Resources:
+    LEETCODE_ITEM_TABLE:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: title
+            AttributeType: S
+        KeySchema:
+          - AttributeName: title
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 10
+          WriteCapacityUnits: 10
+        TableName: ${self:custom.tableName}
