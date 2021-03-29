@@ -1,6 +1,6 @@
 org: zhaoelton
-app: my-fullstack-app
-service: leetcode-api
+app: leetcode_app
+service: itemTrackerApi
 
 frameworkVersion: '2'
 

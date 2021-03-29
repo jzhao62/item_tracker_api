@@ -2,8 +2,12 @@ import os
 
 import boto3
 from flask import Flask, jsonify, make_response
+from logger.logger import log
 
 from botocore.exceptions import ClientError
+
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+table = dynamodb.Table('leetcode-tracker-prod')
 
 app = Flask(__name__)
 
@@ -20,9 +24,6 @@ def echo():
 
 @app.route('/items', methods=['GET'])
 def get_all_items():
-    dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-    table = dynamodb.Table('leetcode-tracker-prod')
-
     scan_kwargs = {}
     items = []
 
@@ -35,24 +36,24 @@ def get_all_items():
         items = response.get('Items', [])
         start_key = response.get('LastEvaluatedKey', None)
         done = start_key is None
+        log(response, "get_all_items")
 
     return jsonify(items)
 
 
 @app.route('/items/<string:title>', methods=['GET'])
 def get_item_by_title(title):
-    dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-    table = dynamodb.Table('leetcode-tracker-prod')
     try:
-        response = table.delete_item(
+        response = table.get_item(
             Key={
                 'title': title
             },
         )
-        item = response.get('item')
+        log(response, "get_item_by_title")
+        item = response.get('Item')
 
         if not item:
-            return jsonify({'error': 'Could not find notes with provided "title"'}), 404
+            return jsonify({'error': 'Could not find notes with provided %s' % title}), 404
 
         return jsonify({
             'title': item.get('title').get('S'),

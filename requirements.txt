@@ -13,3 +13,5 @@ s3transfer~=0.3.6
 urllib3~=1.26.4
 six~=1.15.0
 python-dateutil~=2.8.1
+logdna~=1.5.3
+certifi~=2020.12.5
