@@ -23,6 +23,3 @@ def log(data, handler_name):
 
     log.info(data, opts)
 
-
-
-print('Hello, %s %g' % (123, 123))

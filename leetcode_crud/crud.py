@@ -1,35 +1,98 @@
 import boto3
 from botocore.exceptions import ClientError
+from config.settings import TABLE_NAME, REGION
+from decimal import Decimal
 
 
-def create_item(title, description=None, link=None, dynamodb=None):
+def put_movie(title, year, plot, rating, dynamodb=None):
     if not dynamodb:
-        dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
 
-    table = dynamodb.Table('leetcode_tracker_dev')
+    table = dynamodb.Table(TABLE_NAME)
     response = table.put_item(
         Item={
+            'year': year,
             'title': title,
             'info': {
-                'description': description,
-                'link': link
+                'plot': plot,
+                'rating': rating
             }
         }
     )
-    return response.get('item')
+    return response
 
 
-def delete_item_by_title(title, dynamodb=None):
+def get_movie(title, year, dynamodb=None):
     if not dynamodb:
-        dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+    table = dynamodb.Table(TABLE_NAME)
+    try:
+        response = table.get_item(Key={'year': year, 'title': title})
+    except ClientError as e:
+        print(e.response['Error']['Message'])
+    else:
+        if 'Item' in response: return response['Item']
+        return []
 
-    table = dynamodb.Table('leetcode_tracker_dev')
+
+def update_movie(title, year, rating, plot, actors, dynamodb=None):
+    if not dynamodb:
+        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+
+    table = dynamodb.Table(TABLE_NAME)
+
+    response = table.update_item(
+        Key={
+            'year': year,
+            'title': title
+        },
+        UpdateExpression="set info.rating=:r, info.plot=:p, info.actors=:a",
+        ExpressionAttributeValues={
+            ':r': Decimal(rating),
+            ':p': plot,
+            ':a': actors
+        },
+        ReturnValues="UPDATED_NEW"
+    )
+    return response
+
+
+def increase_rating(title, year, rating_increase, dynamodb=None):
+    if not dynamodb:
+        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+
+    table = dynamodb.Table(TABLE_NAME)
+
+    response = table.update_item(
+        Key={
+            'year': year,
+            'title': title
+        },
+        UpdateExpression="set info.rating = info.rating + :val",
+        ExpressionAttributeValues={
+            ':val': Decimal(rating_increase)
+        },
+        ReturnValues="UPDATED_NEW"
+    )
+    return response
+
+
+def remove_actors(title, year, actor_count, dynamodb=None):
+    if not dynamodb:
+        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+
+    table = dynamodb.Table(TABLE_NAME)
 
     try:
-        response = table.delete_item(
+        response = table.update_item(
             Key={
+                'year': year,
                 'title': title
             },
+            UpdateExpression="remove info.actors[0]",
+            ConditionExpression="size(info.actors) > :num",
+            ExpressionAttributeValues={':num': actor_count},
+            ReturnValues="UPDATED_NEW"
         )
     except ClientError as e:
         if e.response['Error']['Code'] == "ConditionalCheckFailedException":
@@ -40,26 +103,27 @@ def delete_item_by_title(title, dynamodb=None):
         return response
 
 
-def get_all_items(dynamodb=None):
+def delete_underrated_movie(title, year, rating, dynamodb=None):
     if not dynamodb:
-        dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
 
-    table = dynamodb.Table('leetcode_tracker_dev')
-    scan_kwargs = {}
-    items = []
+    table = dynamodb.Table(TABLE_NAME)
 
-    done = False
-    start_key = None
-    while not done:
-        if start_key:
-            scan_kwargs['ExclusiveStartKey'] = start_key
-        response = table.scan(**scan_kwargs)
-        items = response.get('Items', [])
-        start_key = response.get('LastEvaluatedKey', None)
-        done = start_key is None
-
-    return items
-
-
-if __name__ == '__main__':
-    create_item("GGWP")
+    try:
+        response = table.delete_item(
+            Key={
+                'year': year,
+                'title': title
+            },
+            ConditionExpression="info.rating <= :val",
+            ExpressionAttributeValues={
+                ":val": Decimal(rating)
+            }
+        )
+    except ClientError as e:
+        if e.response['Error']['Code'] == "ConditionalCheckFailedException":
+            print(e.response['Error']['Message'])
+        else:
+            raise
+    else:
+        return response
