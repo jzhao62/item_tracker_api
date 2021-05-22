@@ -5,8 +5,9 @@ from logger.logger import log
 from config.settings import TABLE_NAME
 from botocore.exceptions import ClientError
 from flask import request
-from leetcode_crud.crud import get_movie
+from leetcode_crud.crud import get_movie, put_movie, update_movie, increase_rating, delete_underrated_movie
 from decimal import *
+
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table(TABLE_NAME)
 
@@ -16,11 +17,6 @@ if os.environ.get('IS_OFFLINE'):
     dynamodb_client = boto3.client(
         'dynamodb', region_name='localhost', endpoint_url='http://localhost:8000'
     )
-
-
-@app.route("/")
-def echo():
-    return "ECHO"
 
 
 @app.route('/items', methods=['GET'])
@@ -52,6 +48,43 @@ def get_item_by_title():
             print(e.response['Error']['Message'])
         else:
             raise
+
+
+@app.route('/items', methods=['POST'])
+def create_item():
+    year = request.get_json()["year"]
+    title = request.get_json()["title"]
+    plot = request.get_json()["plot"]
+    rating = request.get_json()["rating"]
+
+    return jsonify(put_movie(title, year, plot, rating, dynamodb))
+
+
+@app.route('/items', methods=['PUT'])
+def update_item():
+    year = request.get_json()["year"]
+    title = request.get_json()["title"]
+    plot = request.get_json()["plot"]
+    rating = request.get_json()["rating"]
+    actors = request.get_json()["actors"]
+    return jsonify(update_movie(title, year, rating, plot, actors, dynamodb))
+
+
+@app.route('/item/increase_rating', methods=["POST"])
+def increase_counter():
+    title = request.args.get('title')
+    year = Decimal(request.args.get('year'))
+    increment = request.get_json()["increment"]
+
+    return jsonify(increase_rating(title, year, increment, dynamodb))
+
+
+@app.route('/item', methods=["DELETE"])
+def delete_item():
+    year = request.get_json()["year"]
+    title = request.get_json()["title"]
+
+    return jsonify(delete_underrated_movie(title, year, 100, dynamodb))
 
 
 @app.errorhandler(404)
