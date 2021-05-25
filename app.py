@@ -19,6 +19,11 @@ if os.environ.get('IS_OFFLINE'):
     )
 
 
+@app.route('/', methods=['GET'])
+def echo():
+    return jsonify("server is alive")
+
+
 @app.route('/items', methods=['GET'])
 def fetch_all_items():
     items = get_all(dynamodb)
