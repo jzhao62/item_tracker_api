@@ -22,7 +22,8 @@ if os.environ.get('IS_OFFLINE'):
 @app.route('/items', methods=['GET'])
 def get_item_by_title():
     title = request.args.get('title')
-    year = Decimal(request.args.get('year'))
+    year = None if (request.args.get('year') is None) else Decimal(request.args.get('year'))
+    print(title, year)
     try:
         if title or year:
             return jsonify(get_movie(title, year, dynamodb))
