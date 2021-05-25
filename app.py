@@ -5,7 +5,7 @@ from logger.logger import log
 from config.settings import TABLE_NAME
 from botocore.exceptions import ClientError
 from flask import request
-from leetcode_crud.crud import get_movie, put_movie, update_movie, increase_rating, delete_underrated_movie
+from leetcode_crud.crud import get_item_by_title, create_item, update_item, delete_item_by_title, get_all
 from decimal import *
 
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
@@ -20,71 +20,37 @@ if os.environ.get('IS_OFFLINE'):
 
 
 @app.route('/items', methods=['GET'])
-def get_item_by_title():
+def fetch_all_items():
+    items = get_all(dynamodb)
+    return jsonify(items)
+
+
+@app.route('/item', methods=['GET'])
+def fetch_item_by_title():
     title = request.args.get('title')
-    year = Decimal(request.args.get('year'))
-    try:
-        if title or year:
-            return jsonify(get_movie(title, year, dynamodb))
-        else:
-            scan_kwargs = {}
-            items = []
-
-            done = False
-            start_key = None
-            while not done:
-                if start_key:
-                    scan_kwargs['ExclusiveStartKey'] = start_key
-                response = table.scan(**scan_kwargs)
-                items = response.get('Items', [])
-                start_key = response.get('LastEvaluatedKey', None)
-                done = start_key is None
-                log(response, "get_all_items")
-
-            return jsonify(items)
-
-    except ClientError as e:
-        if e.response['Error']['Code'] == "ConditionalCheckFailedException":
-            print(e.response['Error']['Message'])
-        else:
-            raise
+    return jsonify(get_item_by_title(title, dynamodb))
 
 
-@app.route('/items', methods=['POST'])
-def create_item():
-    year = request.get_json()["year"]
+@app.route('/item', methods=['POST'])
+def post_item():
     title = request.get_json()["title"]
-    plot = request.get_json()["plot"]
-    rating = request.get_json()["rating"]
+    details = request.get_json()["details"]
 
-    return jsonify(put_movie(title, year, plot, rating, dynamodb))
+    return jsonify(create_item(title, details, dynamodb))
 
 
-@app.route('/items', methods=['PUT'])
-def update_item():
-    year = request.get_json()["year"]
+@app.route('/item', methods=['PUT'])
+def put_item():
     title = request.get_json()["title"]
-    plot = request.get_json()["plot"]
-    rating = request.get_json()["rating"]
-    actors = request.get_json()["actors"]
-    return jsonify(update_movie(title, year, rating, plot, actors, dynamodb))
+    details = request.get_json()["details"]
 
-
-@app.route('/item/increase_rating', methods=["POST"])
-def increase_counter():
-    title = request.args.get('title')
-    year = Decimal(request.args.get('year'))
-    increment = request.get_json()["increment"]
-
-    return jsonify(increase_rating(title, year, increment, dynamodb))
+    return jsonify(update_item(title, details, dynamodb))
 
 
 @app.route('/item', methods=["DELETE"])
-def delete_item():
-    year = request.get_json()["year"]
-    title = request.get_json()["title"]
-
-    return jsonify(delete_underrated_movie(title, year, 100, dynamodb))
+def del_item():
+    title = request.args.get('title')
+    return jsonify(delete_item_by_title(title, dynamodb))
 
 
 @app.errorhandler(404)
