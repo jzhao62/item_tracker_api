@@ -2,6 +2,7 @@ org: zhaoelton
 app: leetcode
 service: item-tracker-api
 
+
 frameworkVersion: '2'
 custom:
   tableName: 'leetcode-tracker-${self:provider.stage}'
