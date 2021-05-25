@@ -22,7 +22,9 @@ provider:
   region: us-east-1
 
   environment:
-    LeetCodeTable: ${self:custom.tableName}
+    INGESTION_KEY: ${param:INGESTION_KEY}
+    TABLE_NAME: ${param:TABLE_NAME}
+    REGION: ${param:REGION}
 
   iamRoleStatements:
     - Effect: Allow
