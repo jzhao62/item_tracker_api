@@ -1,10 +1,8 @@
 org: zhaoelton
-app: leetcode_app
+app: leetcode
 service: item-tracker-api
 
-
 frameworkVersion: '2'
-
 custom:
   tableName: 'leetcode-tracker-${self:provider.stage}'
   wsgi:
@@ -20,7 +18,7 @@ provider:
   name: aws
   runtime: python3.8
   lambdaHashingVersion: '20201221'
-  stage: prod
+  stage: dev
   region: us-east-1
 
   environment:
