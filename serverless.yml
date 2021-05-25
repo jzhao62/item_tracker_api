@@ -1,6 +1,6 @@
 org: zhaoelton
 app: leetcode_app
-service: item_tracker_api
+service: item-tracker-api
 
 
 frameworkVersion: '2'
