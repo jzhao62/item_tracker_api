@@ -4,6 +4,7 @@ from config.settings import TABLE_NAME, REGION
 import time
 import calendar
 from decimal import *
+import uuid
 
 ts = Decimal(calendar.timegm(time.gmtime()))
 
@@ -15,6 +16,7 @@ def create_item(title, details, dynamodb=None):
     table = dynamodb.Table(TABLE_NAME)
     response = table.put_item(
         Item={
+            'id': str(uuid.uuid4()),
             'time_created': ts,
             'item_title': title,
             'detail': details
@@ -23,7 +25,7 @@ def create_item(title, details, dynamodb=None):
     return response
 
 
-def get_all(dynamodb=None):
+def get_all_items(dynamodb=None):
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
     table = dynamodb.Table(TABLE_NAME)
@@ -41,16 +43,12 @@ def get_all(dynamodb=None):
     return items
 
 
-def get_item_by_title(title, dynamodb=None):
+def get_item_by_id(item_id, dynamodb=None):
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
     table = dynamodb.Table(TABLE_NAME)
     try:
-        response = table.get_item(
-            Key={
-                'item_title': title
-            }
-        )
+        response = table.get_item(Key={'id': item_id})
 
     except ClientError as e:
         print(e.response['Error']['Message'])
@@ -59,7 +57,7 @@ def get_item_by_title(title, dynamodb=None):
         return []
 
 
-def update_item(title, details, dynamodb=None):
+def update_item(item_id, title, details, dynamodb=None):
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
 
@@ -67,10 +65,11 @@ def update_item(title, details, dynamodb=None):
 
     response = table.update_item(
         Key={
-            'item_title': title
+            'id': item_id,
         },
-        UpdateExpression="set detail=:d, time_created = :s",
+        UpdateExpression="set item_title=:t, detail=:d, time_created = :s",
         ExpressionAttributeValues={
+            ':t': title,
             ':d': details,
             ':s': ts
         },
@@ -79,7 +78,7 @@ def update_item(title, details, dynamodb=None):
     return response
 
 
-def delete_item_by_title(title, dynamodb=None):
+def delete_item_by_id(item_id, dynamodb=None):
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
 
@@ -87,7 +86,7 @@ def delete_item_by_title(title, dynamodb=None):
 
     try:
         response = table.delete_item(
-            Key={'item_title': title},
+            Key={'id': item_id},
         )
     except ClientError as e:
         if e.response['Error']['Code'] == "ConditionalCheckFailedException":

@@ -11,7 +11,7 @@ def delete_underrated_movie(title, year, rating, dynamodb=None):
     table = dynamodb.Table('Movies')
 
     try:
-        response = table.delete_item_by_title(
+        response = table.delete_item_by_id(
             Key={
                 'year': year,
                 'title': title

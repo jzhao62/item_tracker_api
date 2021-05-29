@@ -5,7 +5,7 @@ from logger.logger import log
 from config.settings import TABLE_NAME
 from botocore.exceptions import ClientError
 from flask import request
-from leetcode_crud.crud import get_item_by_title, create_item, update_item, delete_item_by_title, get_all
+from leetcode_crud.crud import get_item_by_id, create_item, update_item, delete_item_by_id, get_all_items
 from decimal import *
 
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
@@ -25,37 +25,35 @@ def echo():
 
 
 @app.route('/items', methods=['GET'])
-def fetch_all_items():
-    items = get_all(dynamodb)
+def _fetch_all_items():
+    items = get_all_items(dynamodb)
     return jsonify(items)
 
 
-@app.route('/item', methods=['GET'])
-def fetch_item_by_title():
+@app.route('/items/<item_id>', methods=['GET'])
+def _fetch_by_id(item_id):
+    return jsonify(get_item_by_id(item_id, dynamodb))
+
+
+@app.route('/items/<item_id>', methods=['PUT'])
+def _update_item(item_id):
+    title = request.get_json()["title"]
+    details = request.get_json()["details"]
+    return jsonify(update_item(item_id, title, details, dynamodb))
+
+
+@app.route('/items/<item_id>', methods=["DELETE"])
+def del_item(item_id):
     title = request.args.get('title')
-    return jsonify(get_item_by_title(title, dynamodb))
+    return jsonify(delete_item_by_id(item_id, dynamodb))
 
 
-@app.route('/item', methods=['POST'])
-def post_item():
+@app.route('/items', methods=['POST'])
+def _create_item():
     title = request.get_json()["title"]
     details = request.get_json()["details"]
 
     return jsonify(create_item(title, details, dynamodb))
-
-
-@app.route('/item', methods=['PUT'])
-def put_item():
-    title = request.get_json()["title"]
-    details = request.get_json()["details"]
-
-    return jsonify(update_item(title, details, dynamodb))
-
-
-@app.route('/item', methods=["DELETE"])
-def del_item():
-    title = request.args.get('title')
-    return jsonify(delete_item_by_title(title, dynamodb))
 
 
 @app.errorhandler(404)
