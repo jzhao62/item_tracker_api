@@ -1,6 +1,6 @@
 import boto3
 from botocore.exceptions import ClientError
-from config.settings import TABLE_NAME
+from settings import TABLE_NAME
 import time
 import calendar
 from decimal import *

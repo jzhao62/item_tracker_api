@@ -2,6 +2,7 @@
 .serverless
 package-lock.json
 
-config
 node_modules
 venv
+.env
+

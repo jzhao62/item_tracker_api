@@ -1,6 +1,6 @@
 import logging
 from logdna import LogDNAHandler
-from config.settings import INGESTION_KEY
+from settings import INGESTION_KEY
 
 
 def log(data, handler_name):

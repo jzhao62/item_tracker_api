@@ -1,7 +1,7 @@
 import os
 import boto3
 from flask import Flask, jsonify, make_response
-from config.settings import TABLE_NAME
+from settings import TABLE_NAME
 from flask import request
 from leetcode_crud.crud import get_item_by_id, create_item, update_item, delete_item_by_id
 from logger.logger import *
