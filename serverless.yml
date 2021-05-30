@@ -48,9 +48,12 @@ functions:
       - http:
           path: /
           method: ANY
+          cors: true # <-- CORS!
       - http:
           path: /{proxy+}
           method: ANY
+          cors: true
+
 
 plugins:
   - serverless-wsgi
