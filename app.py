@@ -1,13 +1,12 @@
 import os
-import boto3
+
 from flask import Flask, jsonify, make_response
-from settings import TABLE_NAME
 from flask import request
-from leetcode_crud.crud import get_item_by_id, create_item, update_item, delete_item_by_id
+
+from leetcode_crud.crud import *
 from logger.logger import *
 
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-table = dynamodb.Table(TABLE_NAME)
 
 app = Flask(__name__)
 
@@ -25,25 +24,7 @@ def echo():
 
 @app.route('/items', methods=['GET'])
 def _fetch_all_items():
-
-    table = dynamodb.Table(TABLE_NAME)
-    scan_kwargs = {}
-    items = []
-    done = False
-    start_key = None
-    while not done:
-        if start_key:
-            scan_kwargs['ExclusiveStartKey'] = start_key
-        response = table.scan(**scan_kwargs)
-        items = response.get('Items', [])
-        start_key = response.get('LastEvaluatedKey', None)
-        done = start_key is None
-
-    # items = get_all_items(dynamodb)
-
-    log(items, "ALL ITEMS")
-
-
+    items = get_all_items(dynamodb)
     return jsonify(items)
 
 
