@@ -19,8 +19,8 @@ if os.environ.get('IS_OFFLINE'):
 
 @app.route('/', methods=['GET'])
 def echo():
-    log("ECHO CALLED", "ECHO")
-    return jsonify("server is alive")
+    log(TABLE_NAME, "ECHO")
+    return jsonify(TABLE_NAME)
 
 
 @app.route('/items', methods=['GET'])
