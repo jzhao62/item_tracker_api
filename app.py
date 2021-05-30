@@ -4,6 +4,7 @@ from flask import Flask, jsonify, make_response
 from config.settings import TABLE_NAME
 from flask import request
 from leetcode_crud.crud import get_item_by_id, create_item, update_item, delete_item_by_id
+from logger.logger import *
 
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table(TABLE_NAME)
@@ -18,11 +19,13 @@ if os.environ.get('IS_OFFLINE'):
 
 @app.route('/', methods=['GET'])
 def echo():
+    log("ECHO CALLED", "ECHO")
     return jsonify("server is alive")
 
 
 @app.route('/items', methods=['GET'])
 def _fetch_all_items():
+
     table = dynamodb.Table(TABLE_NAME)
     scan_kwargs = {}
     items = []
@@ -37,6 +40,10 @@ def _fetch_all_items():
         done = start_key is None
 
     # items = get_all_items(dynamodb)
+
+    log(items, "ALL ITEMS")
+
+
     return jsonify(items)
 
 
