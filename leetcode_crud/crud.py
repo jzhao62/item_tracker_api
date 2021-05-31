@@ -9,7 +9,7 @@ import uuid
 ts = Decimal(calendar.timegm(time.gmtime()))
 
 
-def create_item(title, details, dynamodb=None):
+def create_item(title, detail, dynamodb=None):
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
 
@@ -19,7 +19,7 @@ def create_item(title, details, dynamodb=None):
             'id': str(uuid.uuid4()),
             'time_created': ts,
             'item_title': title,
-            'detail': details
+            'detail': detail
         }
     )
     return response
@@ -67,7 +67,7 @@ def update_item(item_id, title, details, dynamodb=None):
         Key={
             'id': item_id,
         },
-        UpdateExpression="set item_title=:t, detail=:d, time_created = :s",
+        UpdateExpression="set item_title=:t, detail=:d, last_visited = :s",
         ExpressionAttributeValues={
             ':t': title,
             ':d': details,

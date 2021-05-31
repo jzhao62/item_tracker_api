@@ -36,8 +36,8 @@ def _fetch_by_id(item_id):
 @app.route('/items/<item_id>', methods=['PUT'])
 def _update_item(item_id):
     title = request.get_json()["title"]
-    details = request.get_json()["details"]
-    return jsonify(update_item(item_id, title, details, dynamodb))
+    detail = request.get_json()["detail"]
+    return jsonify(update_item(item_id, title, detail, dynamodb))
 
 
 @app.route('/items/<item_id>', methods=["DELETE"])
@@ -49,9 +49,9 @@ def del_item(item_id):
 @app.route('/items', methods=['POST'])
 def _create_item():
     title = request.get_json()["title"]
-    details = request.get_json()["details"]
+    detail = request.get_json()["detail"]
 
-    return jsonify(create_item(title, details, dynamodb))
+    return jsonify(create_item(title, detail, dynamodb))
 
 
 @app.errorhandler(404)
